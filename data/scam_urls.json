@@ -1,0 +1,7 @@
+[
+    {"url": "http://phishing-example.com", "category": "phishing", "source": "PhishTank"},
+    {"url": "http://malicious-example.net", "category": "malware", "source": "URLHaus"},
+    {"url": "http://fakebank-login.com", "category": "phishing", "source": "Manual Entry"},
+    {"url": "http://example-scam1.com", "category": "phishing", "source": "PhishTank"},
+    {"url": "http://example-scam2.net", "category": "malware", "source": "Manual Entry"}
+]

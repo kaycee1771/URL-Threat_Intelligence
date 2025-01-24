@@ -1,0 +1,12 @@
+url,threat_category,detection_method,detection_success,detection_time
+http://kooora.live-kooora.com,phishing,heuristic,True,0.34
+http://example-scam2.net,malware,AI,False,1.23
+http://malicious-site.org,ransomware,heuristic,True,0.56
+http://phishing-example.com,phishing,heuristic,True,0.45
+http://phishing-example.com,phishing,AI,False,1.2
+http://malicious-example.net,malware,heuristic,True,0.45
+http://malicious-example.net,malware,AI,False,1.2
+http://fakebank-login.com,phishing,heuristic,True,0.45
+http://fakebank-login.com,phishing,AI,False,1.2
+http://example-scam1.com,phishing,heuristic,True,0.45
+http://example-scam1.com,phishing,AI,False,1.2
