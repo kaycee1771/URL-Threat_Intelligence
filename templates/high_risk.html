@@ -1,0 +1,5 @@
+<ul>
+    {% for url, severity, score in data %}
+    <li>{{ url }} - Severity: {{ severity }} - Score: {{ score }}</li>
+    {% endfor %}
+</ul>

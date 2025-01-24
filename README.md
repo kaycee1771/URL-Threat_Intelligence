@@ -34,6 +34,16 @@ The URL Threat Intelligence System is a Python-based project designed to identif
 7. **Extensible Framework**
    - Designed to integrate with live threat feeds and machine learning models.
 
+8. **Web-Based Dashboard**
+   - Built using Flask, allowing users to:
+      - Add new URLs via a web form.
+      - View high-risk URLs based on severity and scores.
+      - Submit feedback on existing URLs.
+
+9. **Machine Learning Integration**
+   - Incorporates a trained Random Forest model to classify URLs as malicious or safe.
+   - Predicts risk levels based on dynamically extracted URL features during ingestion.
+
 ## Installation
 
 ### Prerequisites
@@ -80,11 +90,17 @@ The URL Threat Intelligence System is a Python-based project designed to identif
    - The system prompts you to enter a URL, select its category, and specify its source.
    - Automatically calculates the risk score and assigns a severity level.
 
-2. **Data Storage and Analysis**
+2. **Web-Based Features**
+   - Visit the Flask dashboard:
+      - Add URLs via the `/add_url` route.
+      - View high-risk URLs at `/high_risk`.
+      - Submit feedback through the `/feedback` route.
+
+3. **Data Storage and Analysis**
    - All inputs are stored in the database for further analysis.
    - The system avoids duplicate entries and updates existing records when necessary.
 
-3. **Analysis and Visualization**
+4. **Analysis and Visualization**
    - Run the `analysis.py` script to:
      - Generate CSV reports on detection metrics and threat categories.
      - Export detection data for external use.
@@ -111,33 +127,19 @@ The URL Threat Intelligence System is a Python-based project designed to identif
    - Integrate with APIs from sources like URLHaus to fetch real-time threat intelligence.
    - Data from these feeds are automatically ingested into the system.
 
-### 3. **Machine Learning Integration**
-   - Develop and deploy a machine learning model to predict the risk level of URLs based on features.
-   - Use historical data to train the model for classification and anomaly detection.
+### 3. **Improved Machine Learning**
+   - Enhance the current ML model by retraining it on larger datasets.
+   - Introduce an option to monitor live web traffic logs for threats.
 
-### 4. **Web-Based Dashboard**
-   - Create a user-friendly web interface using Flask or Django.
-   - Features:
-     - Search for URLs and view their details.
-     - Visualize trends with interactive charts.
-     - Upload bulk URL data for analysis.
-
-### 5. **Automated Reporting**
-   - Generate periodic reports summarizing key metrics:
-     - Top threat categories.
-     - Most frequently flagged domains.
-     - Detection success rates.
-   - Send reports via email to administrators.
-
-### 6. **Real-Time Monitoring**
+### 4. **Real-Time Monitoring**
    - Implement real-time monitoring to flag high-risk URLs as they are entered.
    - Introduce an option to monitor live web traffic logs for threats.
 
-### 7. **User Feedback Loop**
+### 5. **User Feedback Loop**
    - Allow users to flag URLs as false positives or confirm malicious entries.
    - Use this feedback to refine detection models and rules.
 
-### 8. **Scalability Enhancements**
+### 6. **Scalability Enhancements**
    - Migrate to a cloud platform (e.g., AWS, Google Cloud) for scalability and availability.
    - Optimize database performance with indexing and sharding techniques.
 

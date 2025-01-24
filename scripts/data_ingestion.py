@@ -3,6 +3,9 @@ from urllib.parse import urlparse
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import requests
+import re
+from ml_training import load_model, predict_url
 
 load_dotenv()
 
@@ -14,6 +17,7 @@ DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "port": os.getenv("DB_PORT")
 }
+
 # Function to connect to the database
 def connect_to_db():
     try:
@@ -23,6 +27,27 @@ def connect_to_db():
     except Exception as e:
         print("Error connecting to the database:", e)
         return None
+
+# Function to validate a URL
+def is_valid_url(url):
+    """Validate a URL and handle missing schemes."""
+    url = url.strip() 
+    if not url.startswith(("http://", "https://")):
+        url = "http://" + url 
+
+    parsed = urlparse(url)
+
+
+    if not parsed.netloc or not parsed.scheme:
+        return False
+
+    regex = re.compile(
+        r'^(http|https)://'  
+        r'(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})' 
+        r'(:[0-9]{1,5})?'  
+        r'(\/.*)?$'  
+    )
+    return re.match(regex, url) is not None
 
 # Function to insert a new URL into scam_urls
 def insert_scam_url(cursor, url, category, source):
@@ -66,7 +91,50 @@ def calculate_score(category, url_length, tld):
         score += 20
     return score
 
-# Function to display category options to the user
+# Fetch data from URLHaus
+def fetch_urlhaus_data():
+    url = "https://urlhaus.abuse.ch/downloads/csv/"
+    response = requests.get(url)
+    if response.status_code == 200:
+        print("Fetched URLHaus data successfully!")
+        return response.text.splitlines()
+    else:
+        print(f"Failed to fetch URLHaus data. Status code: {response.status_code}")
+        return []
+
+# Clean data fetched from URLHaus
+def clean_data(line):
+    try:
+        line = line.replace('\x00', '')
+        fields = line.split(",")
+        if len(fields) > 2 and fields[2].startswith("http"):
+            return fields[2]
+    except Exception as e:
+        print(f"Error processing line: {line} - {e}")
+    return None
+
+# Ingest cleaned URLHaus data
+def ingest_urlhaus_data(data, cursor):
+    for line in data[9:]:  
+        url = clean_data(line)
+        if url and is_valid_url(url):
+            category = "malware"
+            source = "URLHaus"
+            try:
+                url_id = insert_scam_url(cursor, url, category, source)
+                if url_id:
+                    print(f"Ingested URL: {url}")
+                else:
+                    print(f"Skipped duplicate URL: {url}")
+            except Exception as e:
+                print(f"Error inserting URL: {url} - {e}")
+        else:
+            print(f"Invalid or corrupted URL skipped: {line}")
+
+# Load the trained ML model
+ml_model = load_model("ml_model.pkl")
+    
+# Function to display category options
 def display_category_options():
     print("\nSelect a threat category:")
     print("1. Phishing")
@@ -87,7 +155,7 @@ def display_category_options():
         else:
             print("Invalid choice. Please select a valid option.")
 
-# Function to display source options to the user
+# Function to display source options
 def display_source_options():
     print("\nSelect the source of the URL:")
     print("1. User")
@@ -105,7 +173,7 @@ def display_source_options():
         else:
             print("Invalid choice. Please select a valid option.")
 
-# Function to prompt the user for input
+# Main function to prompt the user
 def prompt_user():
     conn = connect_to_db()
     if not conn:
@@ -115,7 +183,8 @@ def prompt_user():
     while True:
         print("\nChoose an action:")
         print("1. Add a new URL")
-        print("2. Exit")
+        print("2. Fetch data from URLHaus")
+        print("3. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -123,18 +192,24 @@ def prompt_user():
             # User inputs the URL
             url = input("Enter the URL: ")
 
-            # Display category options and get the user's choice
-            category = display_category_options()
+            if not is_valid_url(url):
+                print("Invalid URL. Please try again.")
+                continue
+        
+            # Classify URL using the trained ML model
+            if ml_model:
+                classification = predict_url(url, ml_model)
+                print(f"The URL is classified as: {classification}")
 
-            # Display source options and get the user's choice
+            # Get category and source
+            category = display_category_options()
             source = display_source_options()
 
-            # Extract features, calculate severity and score
+            # Extract features and insert the URL
             domain, tld, url_length = extract_url_features(url)
             severity = assign_severity(category)
             score = calculate_score(category, url_length, tld)
 
-            # Insert URL into the database
             url_id = insert_scam_url(cursor, url, category, source)
             if url_id:
                 cursor.execute(
@@ -150,9 +225,18 @@ def prompt_user():
                 print("The URL already exists in the database or was invalid.")
 
             conn.commit()
+
         elif choice == "2":
+            urlhaus_data = fetch_urlhaus_data()
+            if urlhaus_data:
+                ingest_urlhaus_data(urlhaus_data, cursor)
+                conn.commit()
+                print("URLHaus data ingestion completed.")
+
+        elif choice == "3":
             print("Exiting. Goodbye!")
             break
+
         else:
             print("Invalid choice. Please select a valid option.")
 

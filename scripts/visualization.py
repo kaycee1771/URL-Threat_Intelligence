@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 # Database connection details
 DB_CONFIG = {
     "dbname": os.getenv("DB_NAME"),
